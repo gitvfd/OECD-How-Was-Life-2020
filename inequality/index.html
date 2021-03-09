@@ -33,7 +33,7 @@
 let margin = { top: 50, right: 10, bottom: 140, left: 75 },
       width = parseInt(d3.select('#chart').style('width'), 10) - margin.left - margin.right,
       height = 600 - margin.top - margin.bottom,
-	  r = 20,
+	  r = 15,
 	  marginSlider=30;
 	  
 if (width < 450) {
@@ -74,6 +74,11 @@ let simulation;
 
 
 // Scales: Radius and y
+
+let x = d3.scaleLinear()
+	//.domain([-2, 2])
+	.range([0,width]);
+
 let y = d3.scaleLinear()
 	//.domain([-2, 2])
 	.range([height, 0]);
@@ -82,12 +87,15 @@ let color = d3.scaleLinear()//.domain([-1, 0, 1])
 	.interpolate(d3.interpolateHcl)
 	.range([d3.rgb("#f1aa70"), d3.rgb("#e0e0e0"), d3.rgb("#0fb9b2")])
 
+//x-axis
+let  xAxis ;
+var xAxisEl ;
 
 // y-axis
 let  yAxis ;
- var yAxisEl ;
+var yAxisEl ;
 
-let wellbeingmin,wellbeingmax, circle;
+let wellbeingmin,wellbeingmax,ineqmin,ineqmax, circle;
 
 // Load data.
 const wellbeing = d3.tsv("data/data.tsv", d3.autoType);
@@ -107,8 +115,11 @@ wellbeing.then(function(data){
 	lowest = d3.min(data,function(d){return parseFloat(d.Year)});
 	highest = d3.max(data,function(d){return parseFloat(d.Year)});
 
-	wellbeingmin = d3.min(data,function(d){return parseFloat(d.value)});
-	wellbeingmax = d3.max(data,function(d){return parseFloat(d.value)});
+	wellbeingmin = d3.min(data,function(d){return parseFloat(d.avg)});
+	wellbeingmax = d3.max(data,function(d){return parseFloat(d.avg)});
+
+	ineqgmin = d3.min(data,function(d){return parseFloat(d.inequality)});
+	ineqmax = d3.max(data,function(d){return parseFloat(d.inequality)});
 
 	color.domain([wellbeingmin, 0, wellbeingmax])
 
@@ -156,8 +167,19 @@ wellbeing.then(function(data){
 
 function initiateViz(val){
 	
+	x.domain([d3.min(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.inequality)}),d3.max(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.inequality)})]).nice()
 
-	y.domain([d3.min(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.value)}),d3.max(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.value)})]).nice()
+	xAxis = d3.axisBottom(x)
+		.tickSize(8)
+		.tickPadding(5);
+
+	xAxisEl = svg.append("g")
+		.attr("class", "x axis bottom")
+		.attr("transform", "translate(0,"+height+")")
+
+	xAxisEl.call(xAxis);
+
+	y.domain([d3.min(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.avg)}),d3.max(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.avg)})]).nice()
 
 	yAxis = d3.axisLeft(y)
 		.tickSize(8)
@@ -166,55 +188,65 @@ function initiateViz(val){
 	yAxisEl = svg.append("g")
 		.attr("class", "y axis left")
 
-	yAxisEl.append("text")
-		.attr("class", "axistitle")
-		.attr("x", -y(16)).attr("y", -36)
-		.attr("dx", "4px")
-		.attr("dy", "-1.6em")
-		.style("text-anchor", "end")
-		.attr("transform", "rotate(-90)")
-		.text("Well-being index");
 	yAxisEl.call(yAxis);
 
 	//Add annotation
 	svg.append("svg:image")
-		.attr('x', 0.4*width)
+		.attr('x', 0.95*width)
 		.attr('y', -25)
 		.attr('width', 40)
 		.attr("xlink:href", "img/arrow-up.svg")
 
 	svg.append("text")
-		.attr("x", 0.4*width+30)
+		.attr("x", 0.95*width)
 		.attr('y', -25)
 		/*.attr("dx", "-.1em")*/
 		.attr("dy", "1.75em")
-		.attr("text-anchor", "start")
+		.attr("text-anchor", "end")
 		.text("Improved Well-Being");
 
+	svg.append("svg:image")
+		.attr('x', 0.05*width)
+		.attr('y', height-50)
+		.attr('width', 40)
+		.attr("xlink:href", "img/arrow-left.svg")
+
+	svg.append("text")
+		.attr("x", 0.05*width+30)
+		.attr('y', height-50)
+		/*.attr("dx", "-.1em")*/
+		.attr("dy", "1.75em")
+		.attr("text-anchor", "start")
+		.text("Lower Inequality");
+
 	// Reference line for national min value.
-	refLine = svg.append("g")
+	refLineAvg = svg.append("g")
 		.attr("id", "wellbeingmin")
 		.attr("transform", "translate(0,"+y(0)+")");
-	refLine.append("line")
+	refLineAvg.append("line")
 		.attr("x1", 0).attr("x2", width)
 		.attr("y1", 0).attr("y2", 0)
 		.attr("stroke", "#000000")
 		.attr("stroke-dasharray", "3,2");
-	/*refLine.append("text")
-		.attr("x", width)
-		.attr("dx", "-.1em")
-		.attr("dy", "-.4em")
-		.attr("text-anchor", "end")
-		.text("FEDERAL MINIMUM value");*/
 
+	refLineIneq = svg.append("g")
+		.attr("id", "wellbeingmin")
+		.attr("transform", "translate("+x(0)+",0)");
+	refLineIneq.append("line")
+		.attr("x1", 0).attr("x2", 0)
+		.attr("y1", 0).attr("y2", height)
+		.attr("stroke", "#000000")
+		.attr("stroke-dasharray", "3,2");
+		
     // Create node data.
     nodes = wellbeingdata.filter(p => p.Year === val).map(function(d,i) {		
         return {
             id: d.ISO,
-            x: width/2 + Math.random(),
-            y: y(d.value) + Math.random(),
+            x: x(d.avg) ,
+            y: y(d.avg) ,
             r: r,
-			value: d.value,
+			avg: d.avg,
+			ineq:d.inequality,
             color: "#e0e0e0",
             group: d.Country,
 			data: []
@@ -224,7 +256,7 @@ function initiateViz(val){
 	nodes.forEach(function(k){
 		wellbeingdata.forEach(function(d){
 			if(k.id==d.ISO){
-				k.data[d.Year]=d.value;
+				k.data[d.Year]=[d.avg,d.inequality];
 			}
 		})
 		count++;
@@ -244,7 +276,7 @@ function initiateViz(val){
 			.attr("cx", d => d.x)
 			.attr("cy", d => d.y)
 			.attr("fill", function(d) {
-					return color(d.data[val]);
+					return color(d.data[val][0]);
 			})
 			.attr("stroke", "#aaa");
 		
@@ -273,8 +305,8 @@ function initiateViz(val){
 		// Forces
 		simulation = d3.forceSimulation(nodes)
 			// .force("cluster", forceCluster())
-			.force("x", d3.forceX(width/2))
-			.force("y", d3.forceY(d => y(d.data[val])))
+			.force("x", d3.forceX(d => x(d.data[val][1])))
+			.force("y", d3.forceY(d => y(d.data[val][0])))
 			.force("collision", d3.forceCollide().radius(d => d.r + padding + 2))
 			.alpha(.25)
 			.alphaDecay(0);
@@ -296,27 +328,37 @@ function initiateViz(val){
 function updateViz(val){
 
 
-		// new domain
-		if(d3.min(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.value)})<=0)
-			y.domain([1.1*d3.min(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.value)}),1.1*d3.max(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.value)})]).nice()
+		// new x domain
+		if(d3.max(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.inequality)})<=0)
+			x.domain([1.1*d3.min(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.inequality)}),0]).nice()
+		else	
+			x.domain([1.1*d3.min(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.inequality)}),1.1*d3.max(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.inequality)})]).nice()
+	
+		// new y domain
+		if(d3.min(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.avg)})<=0)
+			y.domain([1.1*d3.min(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.avg)}),1.1*d3.max(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.avg)})]).nice()
 		else		
-			y.domain([0,1.1*d3.max(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.value)})]).nice()
+			y.domain([0,1.1*d3.max(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.avg)})]).nice()
 
+
+		xAxisEl.transition().ease(d3.easeLinear).duration(time_step).call(xAxis);
 		yAxisEl.transition().ease(d3.easeLinear).duration(time_step).call(yAxis);
 
 		nodes.forEach(function(o,i) {
-			o.value = o.data[val];
+			o.avg = o.data[val][0];
+			o.ineq= o.data[val][1];
 			o.color = "#e0e0e0";
 			o.r = r;
 		});
 		
 		// new position for nodes.
 		simulation
-			.force("y", d3.forceY(d => y(d.value)))
+			.force("x", d3.forceX(d => x(d.ineq)))
+			.force("y", d3.forceY(d => y(d.avg)))
 			.force("collision", d3.forceCollide().radius(d => d.r + padding + 2));
 		
-		// update fed min value
-		refLine
+		// update fed min avg
+		refLineAvg
 			.transition()
 			.ease(d3.easeLinear)
 			.duration(time_step)
@@ -324,13 +366,18 @@ function updateViz(val){
 		/*wellbeingmin.select(".val")
 			.text("$"+d3.format(".2f")(wellbeingmin_d[val]));*/
 		
+		refLineIneq
+			.transition()
+			.ease(d3.easeLinear)
+			.duration(time_step)
+			.attr("transform", "translate("+x(0)+",0)");
 		
 		circle
 			.transition()
 			.duration(time_step)
 			.ease(d3.easeLinear)
 	  		.attr("fill", function(d) {
-					return color(d.data[val]);
+					return color(d.data[val][0]);
 	  		})
 }
 
