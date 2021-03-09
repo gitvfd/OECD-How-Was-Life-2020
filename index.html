@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<!--
+	Sources:
+	https://bl.ocks.org/johnwalley/e1d256b81e51da68f7feb632a53c3518
+	https://github.com/johnwalley/d3-simple-slider
+	https://flowingdata.com/projects/2021/minimum-wage/?initialWidth=670&childId=minwage&parentTitle=How%20Much%20Minimum%20Wage%20Changed%20in%20Each%20State%20%7C%20FlowingData&parentUrl=https%3A%2F%2Fflowingdata.com%2F2021%2F03%2F01%2Fhow-much-minimum-wage-changed-in-each-state%2F
+
+-->
+<head>
+<meta charset="utf-8">
+<title>Minimum value by State</title>
+<link rel="stylesheet" href="css/site.css" type="text/css" media="screen" />
+<link href='https://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
+</head>
+<div id="main-wrapper">
+<h1>Well-Being have strongly improve over the years</h1>
+
+<h2>Composite indicator scores of average well-being </h2>
+<div id=intro>The well-being scores are build through a combination of indicators, which are good measures of the concepts of well-being. They are GDP per capita, Real wage, Height, Life expectancy, Average years of education, Polity, Biodiversity, Homicide rate, Working hours, Extreme poverty</div>
+  <div class="row align-items-center">
+    <div class="col-sm-2"><input id="value-simple" type="number" value="" oninput="sliderchange()"></div></div>
+    <div class="col-sm"><div id="slider-fill"></div></div>
+  </div>
+  <div id="yearDisplayed">In <span id="updateYear"></span></div><button id="play-button">Play</button>
+<div id="chart"></div>
+</div>
+<script src="js/d3.v6.min.js"></script>
+
+<script src="https://unpkg.com/d3-simple-slider"></script>
+<script>
+
+// Dimensions of chart.
+let margin = { top: 50, right: 10, bottom: 140, left: 75 },
+      width = parseInt(d3.select('#chart').style('width'), 10) - margin.left - margin.right,
+      height = 600 - margin.top - margin.bottom,
+	  r = 13,
+	  marginSlider=30;
+	  
+if (width < 450) {
+	r = 11;
+	height = 600 - margin.top - margin.bottom;
+}
+
+
+	const time_step = 500;
+	let currentValue = 2*marginSlider;
+
+//Slider action def
+	var playButton = d3.select("#play-button");
+
+//format data
+
+	var formatDate = d3.timeFormat("%Y");
+	var parseDate = d3.timeParse("%Y");	
+
+//All Data
+let nodes;
+
+// User-controled variables.
+
+//d3.select("#curryear").text(USER_YEAR);
+
+// Node spacing.
+const padding = 0; // Space between nodes
+
+//Define svg
+let svg = d3.select("#chart").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+let simulation;
+
+
+// Scales: Radius and y
+let y = d3.scaleLinear()
+	//.domain([-2, 2])
+	.range([height, 0]);
+
+let color = d3.scaleLinear()//.domain([-1, 0, 1])
+	.interpolate(d3.interpolateHcl)
+	.range([d3.rgb("#f1aa70"), d3.rgb("#e0e0e0"), d3.rgb("#0fb9b2")])
+
+
+// y-axis
+let  yAxis ;
+ var yAxisEl ;
+
+let wellbeingmin,wellbeingmax, circle;
+
+// Load data.
+const wellbeing = d3.tsv("data/data.tsv", d3.autoType);
+let wellbeingdata;
+
+
+var sliderFill;var gFill;
+var startDate;var endDate;var lowest;var highest;
+
+// Once data is loaded...
+wellbeing.then(function(data){
+
+	wellbeingdata=data
+	startDate = d3.min(data,function(d){return parseDate(d.Year)});
+	endDate = d3.max(data,function(d){return parseDate(d.Year)});
+
+	lowest = d3.min(data,function(d){return parseFloat(d.Year)});
+	highest = d3.max(data,function(d){return parseFloat(d.Year)});
+
+	wellbeingmin = d3.min(data,function(d){return parseFloat(d.value)});
+	wellbeingmax = d3.max(data,function(d){return parseFloat(d.value)});
+
+	color.domain([wellbeingmin, 0, wellbeingmax])
+
+	//Fill in the values in the right place in template
+	document.getElementById('value-simple').value=lowest;
+	document.getElementById('updateYear').innerHTML=lowest;
+
+	initiateViz(lowest);
+
+	 sliderFill = d3
+		.sliderBottom()
+		.min((lowest))
+		.max((highest))
+		.width(width-2*marginSlider)
+		.tickFormat(d3.format('.0f'))
+		.ticks(5)
+		//.tickValues([...new Set(data.map(d => d.Year))])
+		.marks([...new Set(data.map(d => d.Year))])
+		.fill('#78E4CE')
+		.handle(
+			d3.symbol().type(d3.symbolCircle).size(400)()
+    	)
+		.on('onchange', val => {
+		//d3.select('p#value-fill').text(d3.format('.0f')(val));
+	
+        document.getElementById("value-simple").value=d3.format('.0f')(val)
+		document.getElementById('updateYear').innerHTML=val;
+		updateViz(val)
+		});
+     
+	 gFill = d3
+		.select('div#slider-fill')
+		.append('svg')
+		.attr('width', width)
+		.attr('height',55)
+		.append('g')
+		.attr('transform', 'translate('+marginSlider+','+marginSlider/2.5+')');
+
+	gFill.call(sliderFill);
+
+	d3.select('p#value-fill').text(d3.format('.0f')(sliderFill.value()));
+
+})
+
+
+function initiateViz(val){
+	
+
+	y.domain([d3.min(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.value)}),d3.max(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.value)})]).nice()
+
+	yAxis = d3.axisLeft(y)
+		.tickSize(8)
+		.tickPadding(5);
+
+	yAxisEl = svg.append("g")
+		.attr("class", "y axis left")
+
+	yAxisEl.append("text")
+		.attr("class", "axistitle")
+		.attr("x", -y(16)).attr("y", -36)
+		.attr("dx", "4px")
+		.attr("dy", "-1.6em")
+		.style("text-anchor", "end")
+		.attr("transform", "rotate(-90)")
+		.text("Well-being index");
+	yAxisEl.call(yAxis);
+
+	//Add annotation
+	svg.append("svg:image")
+		.attr('x', 0.4*width)
+		.attr('y', -25)
+		.attr('width', 40)
+		.attr("xlink:href", "img/arrow-up.svg")
+
+	svg.append("text")
+		.attr("x", 0.4*width+30)
+		.attr('y', -25)
+		/*.attr("dx", "-.1em")*/
+		.attr("dy", "1.75em")
+		.attr("text-anchor", "start")
+		.text("Improved Well-Being");
+
+	// Reference line for national min value.
+	refLine = svg.append("g")
+		.attr("id", "wellbeingmin")
+		.attr("transform", "translate(0,"+y(0)+")");
+	refLine.append("line")
+		.attr("x1", 0).attr("x2", width)
+		.attr("y1", 0).attr("y2", 0)
+		.attr("stroke", "#000000")
+		.attr("stroke-dasharray", "3,2");
+	/*refLine.append("text")
+		.attr("x", width)
+		.attr("dx", "-.1em")
+		.attr("dy", "-.4em")
+		.attr("text-anchor", "end")
+		.text("FEDERAL MINIMUM value");*/
+
+    // Create node data.
+    nodes = wellbeingdata.filter(p => p.Year === val).map(function(d,i) {		
+        return {
+            id: d.ISO,
+            x: width/2 + Math.random(),
+            y: y(d.value) + Math.random(),
+            r: r,
+			value: d.value,
+            color: "#e0e0e0",
+            group: d.Country,
+			data: []
+        }
+    })
+	var count=0;
+	nodes.forEach(function(k){
+		wellbeingdata.forEach(function(d){
+			if(k.id==d.ISO){
+				k.data[d.Year]=d.value;
+			}
+		})
+		count++;
+		if(count==nodes.length){
+			render(val)	;
+		}	
+	})
+//	render()
+	function render(val){
+		
+		// Circle for each node.
+		circle = svg.append("g")
+			.selectAll("circle")
+			.data(nodes)
+			.join("circle")
+			.attr("id", d => "circle"+d.id)
+			.attr("cx", d => d.x)
+			.attr("cy", d => d.y)
+			.attr("fill", function(d) {
+					return color(d.data[val]);
+			})
+			.attr("stroke", "#aaa");
+		
+		
+		// Ease in the circles.
+		circle.transition()
+			.delay((d,i) => i * 5)
+			.duration(200)
+			.attrTween("r", d => {
+				const i = d3.interpolate(0, d.r);
+				return t => d.r = i(t);
+			});
+		
+		// State labels.
+		const label = svg.append("g")
+			.selectAll("text")
+			.data(nodes)
+			.join("text")
+			.attr("id", d => "label"+d.id)
+			.attr("class", "statelabel")
+			.attr("x", d => d.x)
+			.attr("y", d => d.y)
+			.attr("dy", ".3em")
+			.text(d => d.id);
+		
+		// Forces
+		simulation = d3.forceSimulation(nodes)
+			// .force("cluster", forceCluster())
+			.force("x", d3.forceX(width/2))
+			.force("y", d3.forceY(d => y(d.data[val])))
+			.force("collision", d3.forceCollide().radius(d => d.r + padding + 2))
+			.alpha(.25)
+			.alphaDecay(0);
+		
+		// Adjust position of circles.
+		simulation.on("tick", () => {    
+			circle
+				.attr("cx", d => d.x)
+				.attr("cy", d => d.y)
+				// .attr("fill", d => d.color);
+			d3.selectAll(".statelabel")
+				.attr("x", d => d.x)
+				.attr("y", d => d.y)
+		});
+	}
+}
+
+
+function updateViz(val){
+
+
+		// new domain
+		if(d3.min(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.value)})<=0)
+			y.domain([1.1*d3.min(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.value)}),1.1*d3.max(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.value)})]).nice()
+		else		
+			y.domain([0,1.1*d3.max(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.value)})]).nice()
+
+		yAxisEl.transition().ease(d3.easeLinear).duration(time_step).call(yAxis);
+
+		nodes.forEach(function(o,i) {
+			o.value = o.data[val];
+			o.color = "#e0e0e0";
+			o.r = r;
+		});
+		
+		// new position for nodes.
+		simulation
+			.force("y", d3.forceY(d => y(d.value)))
+			.force("collision", d3.forceCollide().radius(d => d.r + padding + 2));
+		
+		// update fed min value
+		refLine
+			.transition()
+			.ease(d3.easeLinear)
+			.duration(time_step)
+			.attr("transform", "translate(0,"+y(0)+")");
+		/*wellbeingmin.select(".val")
+			.text("$"+d3.format(".2f")(wellbeingmin_d[val]));*/
+		
+		
+		circle
+			.transition()
+			.duration(time_step)
+			.ease(d3.easeLinear)
+	  		.attr("fill", function(d) {
+					return color(d.data[val]);
+	  		})
+}
+
+
+
+
+function sliderchange(){
+	sliderFill.silentValue(document.getElementById('value-simple').value)
+}
+
+playButton
+    .on("click", function() {
+		var button = d3.select(this);
+		if (button.text() == "Pause") {
+		moving = false;
+		clearInterval(timer);
+		// timer = 0;
+		button.text("Play");
+    } else {
+      moving = true;
+      timer = setInterval(step, 1000);
+      button.text("Pause");
+    }
+    console.log("Slider moving: " + moving);
+})
+
+
+  
+function step() {
+
+	var temp=[...new Set(wellbeingdata.map(d => d.Year))]
+
+	if(document.getElementById('value-simple').value!=highest){
+		
+		var a = temp.indexOf(parseInt(document.getElementById('value-simple').value))
+		sliderFill.silentValue(temp[a+1])
+		document.getElementById('value-simple').value=temp[a+1];
+
+		document.getElementById('updateYear').innerHTML=temp[a+1];
+		updateViz(temp[a+1])
+	}
+	else{
+		moving = false;
+   	 	clearInterval(timer);
+    	playButton.text("Play");
+    	console.log("Slider moving: " + moving);
+	}
+
+
+	
+}	
+
+
+
+
+d3.select(window).on('resize', resize);
+
+function resize() {
+	
+	// update width
+    width = parseInt(d3.select('#chart').style('width'), 10);
+    width = width - margin.left - margin.right;
+	
+	if (width < 450) {
+		r = 11;
+		height = 600 - margin.top - margin.bottom;
+	} else {
+		r = 13;
+		height = 800 - margin.top - margin.bottom;
+	}
+	
+	// change dimensions of SVG	
+	d3.select(svg.node().parentNode)
+    	.style('width', (width + margin.left + margin.right) + 'px')
+		.style('height', (height + margin.top + margin.bottom) + 'px');
+	
+	// adjust forces
+	simulation
+		.force("x", d3.forceX(width/2))
+		.force("collision", d3.forceCollide().radius(d => d.r + padding + 2));
+	circle.attr("r", r);
+	
+	// adjust reference line.
+	refLine.select("line")
+		.attr("x2", width);
+	refLine.selectAll("text")
+		.attr("x", width);
+}
+
+
+
+
+</script>
