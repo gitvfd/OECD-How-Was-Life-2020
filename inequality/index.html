@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <!--
 	Sources:
@@ -13,9 +15,9 @@
 <link href='https://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
 </head>
 <div id="main-wrapper">
-<h1>Well-Being have strongly improve over the years</h1>
+<h1>Better Well-Being and reducing inequalities over the years</h1>
 
-<h2>Composite indicator scores of average well-being </h2>
+<h2>Composite indicator scores of average well-being and inequalities</h2>
 <div id=intro>Play with the data and see how well-being has improved and inequalities have decreased since 1870 by looking at a combination of indicators, including: GDP per capita, Real wage, Height, Life expectancy, Average years of education, Polity, Biodiversity, Homicide rate, Working hours and Extreme poverty.</div>
   <div class="row align-items-center">
     <div class="col-sm-2"><input id="value-simple" type="number" value="" oninput="sliderchange()"></div></div>
@@ -28,6 +30,20 @@
 
 <script src="https://unpkg.com/d3-simple-slider"></script>
 <script>
+//text narrative
+let text1870="In 1870, Western Europe and the Western Offshoots perform better than the other countries both for the well-being average and the inequalities."
+let text1910="Western Europe and Western Offshoots see their well-being score increase but some countries start catching up. With the increase in well-being, we observe a reduction in inequalities."
+let text1950="Western Europe and Western Offshoots have the highest scores on the well- being indicator, but Western Europe inequalities levels fall below the levels of the Western Offshoots."
+let text1970="Poland, Mexico and China are catching up with the leading countries."
+let text2000="Overall, the world has seen great progress. No country has a worse overall well-being today than the best performing countries had in 1820. Nevertheless the gains haven't proceeded at the same pace across regions. Differences in well-being inequalities between regions in 2000 were substantially smaller than in 1900"
+
+var divCircle = d3.select("body").append("div") 
+	.attr("class", "tooltip")       
+	.style("opacity", 0);
+
+var divAnnotation = d3.select("body").append("div") 
+	.attr("class", "annotation")       
+	.style("opacity", 0);
 
 // Dimensions of chart.
 let margin = { top: 50, right: 10, bottom: 140, left: 75 },
@@ -35,6 +51,7 @@ let margin = { top: 50, right: 10, bottom: 140, left: 75 },
       height = 600 - margin.top - margin.bottom,
 	  r = 15,
 	  marginSlider=30;
+	  widthSlider = parseInt(d3.select('#chart').style('width'), 10) - 2*marginSlider;
 	  
 if (width < 450) {
 	r = 11;
@@ -42,7 +59,8 @@ if (width < 450) {
 }
 
 
-	const time_step = 500;
+	const time_step = 2500;
+	const time_trans = 1000;
 	let currentValue = 2*marginSlider;
 
 //Slider action def
@@ -133,7 +151,7 @@ wellbeing.then(function(data){
 		.sliderBottom()
 		.min((lowest))
 		.max((highest))
-		.width(width-2*marginSlider)
+		.width(widthSlider)
 		.tickFormat(d3.format('.0f'))
 		.ticks(5)
 		//.tickValues([...new Set(data.map(d => d.Year))])
@@ -153,7 +171,7 @@ wellbeing.then(function(data){
 	 gFill = d3
 		.select('div#slider-fill')
 		.append('svg')
-		.attr('width', width)
+		.attr('width', parseInt(d3.select('#chart').style('width'), 10))
 		.attr('height',55)
 		.append('g')
 		.attr('transform', 'translate('+marginSlider+','+marginSlider/2.5+')');
@@ -190,20 +208,6 @@ function initiateViz(val){
 
 	yAxisEl.call(yAxis);
 
-	//Add annotation
-/*	var refArrowAvg= svg.append("svg:image")
-		.attr('x', 0.95*width)
-		.attr('y', -25)
-		.attr('width', 40)
-		.attr("xlink:href", "img/arrow-up.svg")
-
-	var refYexyAvg= svg.append("text")
-		.attr("x", 0.95*width)
-		.attr('y', -25)
-		.attr("dy", "1.75em")
-		.attr("text-anchor", "end")
-		.text("Improved Well-Being");*/
-
 
 	// Reference line for national min value.
 	refLineAvg = svg.append("g")
@@ -212,7 +216,7 @@ function initiateViz(val){
 	refLineAvg.append("line")
 		.attr("x1", 0).attr("x2", width)
 		.attr("y1", 0).attr("y2", 0)
-		.attr("stroke", "#000000")
+		.attr("stroke", "#979797")
 		.attr("stroke-dasharray", "3,2");
 	refLineAvg.append("svg:image")
 		.attr('x', 0.95*width)
@@ -225,10 +229,7 @@ function initiateViz(val){
 		/*.attr("dx", "-.1em")*/
 		//.attr("dy", "1.75em")
 		.attr("text-anchor", "end")
-		.text("Improved Well-Being");
-
-
-
+		.text("Better Well-Being");
 
 
 	refLineIneq = svg.append("g")
@@ -237,7 +238,7 @@ function initiateViz(val){
 	refLineIneq.append("line")
 		.attr("x1", 0).attr("x2", 0)
 		.attr("y1", 0).attr("y2", height)
-		.attr("stroke", "#000000")
+		.attr("stroke", "#979797")
 		.attr("stroke-dasharray", "3,2");
 		
 	refLineIneq.append("svg:image")
@@ -254,6 +255,7 @@ function initiateViz(val){
 		.attr('transform','rotate(-90)')
 		.attr("text-anchor", "start")
 		.text("Lower Inequality");
+
     // Create node data.
     nodes = wellbeingdata.filter(p => p.Year === val).map(function(d,i) {		
         return {
@@ -280,7 +282,8 @@ function initiateViz(val){
 			render(val)	;
 		}	
 	})
-//	render()
+
+	//	render()
 	function render(val){
 		
 		// Circle for each node.
@@ -305,6 +308,31 @@ function initiateViz(val){
 				const i = d3.interpolate(0, d.r);
 				return t => d.r = i(t);
 			});
+
+
+		circle.on('mouseover', function (d) {
+				d3.select("#circle"+d.srcElement.__data__.id).style("opacity",0.5)
+				divCircle.transition()
+					.duration(250)
+					.style("opacity", 1);
+				var htmlText = "<b>" + d.srcElement.__data__.group + "</b>";
+				divCircle.html(htmlText)
+					.style("left", event.pageX - document.body.scrollLeft + "px")
+					.style("top", event.pageY /*- document.body.scrollTop*/ + "px");
+				})
+			
+			.on("mousemove", function (d) {
+				divCircle
+					.style("left", event.pageX - document.body.scrollLeft + 10 + "px")
+					.style("top", event.pageY + "px");
+
+			})
+			.on('mouseout', function (d) {
+				d3.select("#circle"+d.srcElement.__data__.id).style("opacity",1)
+				divCircle.transition()
+					.duration(100)
+					.style("opacity", 0);
+			})
 		
 		// State labels.
 		const label = svg.append("g")
@@ -317,7 +345,30 @@ function initiateViz(val){
 			.attr("y", d => d.y)
 			.attr("dy", ".3em")
 			.text(d => d.id);
-		
+		label.on('mouseover', function (d) {
+				d3.select("#circle"+d.srcElement.__data__.id).style("opacity",0.5)
+				divCircle.transition()
+					.duration(250)
+					.style("opacity", 1);
+				var htmlText = "<b>" + d.srcElement.__data__.group + "</b>";
+				divCircle.html(htmlText)
+					.style("left", event.pageX - document.body.scrollLeft + "px")
+					.style("top", event.pageY /*- document.body.scrollTop*/ + "px");
+				})
+			
+			.on("mousemove", function (d) {
+				divCircle
+					.style("left", event.pageX - document.body.scrollLeft + 10 + "px")
+					.style("top", event.pageY + "px");
+
+			})
+			.on('mouseout', function (d) {
+				d3.select("#circle"+d.srcElement.__data__.id).style("opacity",1)
+				divCircle.transition()
+					.duration(100)
+					.style("opacity", 0);
+			})		
+
 		// Forces
 		simulation = d3.forceSimulation(nodes)
 			// .force("cluster", forceCluster())
@@ -337,7 +388,16 @@ function initiateViz(val){
 				.attr("x", d => d.x)
 				.attr("y", d => d.y)
 		});
-	}
+	//Annotation narrative
+	divAnnotation.transition()
+				.duration(250)
+				.style("opacity", 1);
+
+	if(val=="1870"){
+			var htmlText = text1870;
+			divAnnotation.html(htmlText)
+	}		
+}
 }
 
 
@@ -357,8 +417,8 @@ function updateViz(val){
 			y.domain([0,1.1*d3.max(wellbeingdata.filter(p => p.Year === val),function(d){return parseFloat(d.avg)})]).nice()
 
 
-		xAxisEl.transition().ease(d3.easeLinear).duration(time_step).call(xAxis);
-		yAxisEl.transition().ease(d3.easeLinear).duration(time_step).call(yAxis);
+		xAxisEl.transition().ease(d3.easeLinear).duration(time_trans).call(xAxis);
+		yAxisEl.transition().ease(d3.easeLinear).duration(time_trans).call(yAxis);
 
 		nodes.forEach(function(o,i) {
 			o.avg = o.data[val][0];
@@ -377,7 +437,7 @@ function updateViz(val){
 		refLineAvg
 			.transition()
 			.ease(d3.easeLinear)
-			.duration(time_step)
+			.duration(time_trans)
 			.attr("transform", "translate(0,"+y(0)+")");
 		/*wellbeingmin.select(".val")
 			.text("$"+d3.format(".2f")(wellbeingmin_d[val]));*/
@@ -385,16 +445,40 @@ function updateViz(val){
 		refLineIneq
 			.transition()
 			.ease(d3.easeLinear)
-			.duration(time_step)
+			.duration(time_trans)
 			.attr("transform", "translate("+x(0)+",0)");
 		
 		circle
 			.transition()
-			.duration(time_step)
+			.duration(time_trans)
 			.ease(d3.easeLinear)
 	  		.attr("fill", function(d) {
 					return color((d.data[val][0]-d.data[val][1])/2);
 	  		})
+
+	
+		//Annotation narrative
+
+		if(val=="1870"){
+				var htmlText = text1870;
+				divAnnotation.html(htmlText)
+		}			
+		if(val=="1910"){
+				var htmlText = text1910;
+				divAnnotation.html(htmlText)
+		}			
+		if(val=="1950"){
+				var htmlText = text1950;
+				divAnnotation.html(htmlText)
+		}			
+		if(val=="1970"){
+				var htmlText = text1970;
+				divAnnotation.html(htmlText)
+		}			
+		if(val=="2000"){
+				var htmlText = text2000;
+				divAnnotation.html(htmlText)
+		}			
 }
 
 
@@ -414,7 +498,7 @@ playButton
 		button.text("Play");
     } else {
       moving = true;
-      timer = setInterval(step, 1000);
+      timer = setInterval(step, time_step);
       button.text("Pause");
     }
     console.log("Slider moving: " + moving);
@@ -434,6 +518,8 @@ function step() {
 
 		document.getElementById('updateYear').innerHTML=temp[a+1];
 		updateViz(temp[a+1])
+
+					
 	}
 	else{
 		moving = false;
@@ -472,15 +558,20 @@ function resize() {
 	
 	// adjust forces
 	simulation
-		.force("x", d3.forceX(width/2))
 		.force("collision", d3.forceCollide().radius(d => d.r + padding + 2));
 	circle.attr("r", r);
 	
 	// adjust reference line.
-	refLine.select("line")
+	/*refLineAvg.select("line")
 		.attr("x2", width);
-	refLine.selectAll("text")
+	refLineAvg.selectAll("text")
 		.attr("x", width);
+	
+	// adjust reference line.
+	refLineIneq.select("line")
+		.attr("y2", height);
+	refLineIneq.selectAll("text")
+		.attr("x", width);*/
 }
 
 
