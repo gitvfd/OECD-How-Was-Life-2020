@@ -16,7 +16,7 @@
 <h1>Well-Being have strongly improve over the years</h1>
 
 <h2>Composite indicator scores of average well-being </h2>
-<div id=intro>Play with the data and see how well-being has improved since 1820 by looking at a combination of indicators, including: GDP per capita, Real wage, Height, Life expectancy, Average years of education, Polity, Biodiversity, Homicide rate, Working hours and Extreme poverty.</div>
+<div id=intro>Play with the data and see how well-being has improved and inequalities have decreased since 1870 by looking at a combination of indicators, including: GDP per capita, Real wage, Height, Life expectancy, Average years of education, Polity, Biodiversity, Homicide rate, Working hours and Extreme poverty.</div>
   <div class="row align-items-center">
     <div class="col-sm-2"><input id="value-simple" type="number" value="" oninput="sliderchange()"></div></div>
     <div class="col-sm"><div id="slider-fill"></div></div>
@@ -118,10 +118,10 @@ wellbeing.then(function(data){
 	wellbeingmin = d3.min(data,function(d){return parseFloat(d.avg)});
 	wellbeingmax = d3.max(data,function(d){return parseFloat(d.avg)});
 
-	ineqgmin = d3.min(data,function(d){return parseFloat(d.inequality)});
+	ineqmin = d3.min(data,function(d){return parseFloat(d.inequality)});
 	ineqmax = d3.max(data,function(d){return parseFloat(d.inequality)});
 
-	color.domain([wellbeingmin, 0, wellbeingmax])
+	color.domain([(wellbeingmin-ineqmax)/2, 0, (wellbeingmax-ineqmin)/2])
 
 	//Fill in the values in the right place in template
 	document.getElementById('value-simple').value=lowest;
@@ -191,33 +191,19 @@ function initiateViz(val){
 	yAxisEl.call(yAxis);
 
 	//Add annotation
-	svg.append("svg:image")
+/*	var refArrowAvg= svg.append("svg:image")
 		.attr('x', 0.95*width)
 		.attr('y', -25)
 		.attr('width', 40)
 		.attr("xlink:href", "img/arrow-up.svg")
 
-	svg.append("text")
+	var refYexyAvg= svg.append("text")
 		.attr("x", 0.95*width)
 		.attr('y', -25)
-		/*.attr("dx", "-.1em")*/
 		.attr("dy", "1.75em")
 		.attr("text-anchor", "end")
-		.text("Improved Well-Being");
+		.text("Improved Well-Being");*/
 
-	svg.append("svg:image")
-		.attr('x', 0.05*width)
-		.attr('y', height-50)
-		.attr('width', 40)
-		.attr("xlink:href", "img/arrow-left.svg")
-
-	svg.append("text")
-		.attr("x", 0.05*width+30)
-		.attr('y', height-50)
-		/*.attr("dx", "-.1em")*/
-		.attr("dy", "1.75em")
-		.attr("text-anchor", "start")
-		.text("Lower Inequality");
 
 	// Reference line for national min value.
 	refLineAvg = svg.append("g")
@@ -228,6 +214,22 @@ function initiateViz(val){
 		.attr("y1", 0).attr("y2", 0)
 		.attr("stroke", "#000000")
 		.attr("stroke-dasharray", "3,2");
+	refLineAvg.append("svg:image")
+		.attr('x', 0.95*width)
+		.attr('y', -40)
+		.attr('width', 40)
+		.attr("xlink:href", "img/arrow-up.svg")
+	refLineAvg.append("text")
+		.attr("x", 0.95*width)
+		.attr('dy', '-1em')
+		/*.attr("dx", "-.1em")*/
+		//.attr("dy", "1.75em")
+		.attr("text-anchor", "end")
+		.text("Improved Well-Being");
+
+
+
+
 
 	refLineIneq = svg.append("g")
 		.attr("id", "wellbeingmin")
@@ -238,6 +240,20 @@ function initiateViz(val){
 		.attr("stroke", "#000000")
 		.attr("stroke-dasharray", "3,2");
 		
+	refLineIneq.append("svg:image")
+		.attr('x', -40)
+		.attr('y', height-150)
+		.attr('width', 40)
+		.attr("xlink:href", "img/arrow-left.svg")
+
+	refLineIneq.append("text")
+		//.attr("x", 0.05*width+30)
+		.attr('y', -15)
+		.attr("x", -height)
+		//.attr("dy", "1.75em")
+		.attr('transform','rotate(-90)')
+		.attr("text-anchor", "start")
+		.text("Lower Inequality");
     // Create node data.
     nodes = wellbeingdata.filter(p => p.Year === val).map(function(d,i) {		
         return {
@@ -276,7 +292,7 @@ function initiateViz(val){
 			.attr("cx", d => d.x)
 			.attr("cy", d => d.y)
 			.attr("fill", function(d) {
-					return color(d.data[val][0]);
+					return color((d.data[val][0]-d.data[val][1])/2);
 			})
 			.attr("stroke", "#aaa");
 		
@@ -377,7 +393,7 @@ function updateViz(val){
 			.duration(time_step)
 			.ease(d3.easeLinear)
 	  		.attr("fill", function(d) {
-					return color(d.data[val][0]);
+					return color((d.data[val][0]-d.data[val][1])/2);
 	  		})
 }
 
