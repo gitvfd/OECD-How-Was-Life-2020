@@ -112,8 +112,17 @@ h2{
 .reload:hover{
   opacity:0.5;
 }
-.ticks {
-  font-size: 8px;
+
+.tick {
+  stroke:#979797;
+  stroke-width: 0.25;
+  font-family: 'Noto Sans', sans-serif;
+  font-weight: 100;
+  font-size: 0.85rem;
+}
+
+.domain{
+  stroke:none;
 }
 
 #legend{
