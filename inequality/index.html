@@ -18,12 +18,15 @@
 <h1>Well-Being improving and inequalities decreasing over the years</h1>
 
 <h2>Composite indicator scores of average well-being and inequalities</h2>
-<div id=intro>Play with the data and see how well-being has improved and inequalities have decreased since 1870 by looking at a combination of indicators, including: GDP per capita, Real wage, Height, Life expectancy, Average years of education, Polity, Biodiversity, Homicide rate, Working hours and Extreme poverty.</div>
+<div id=intro>Play with the data and see how well-being has improved and inequalities have decreased since 1870 by looking at a combination of indicators, including: GDP per capita, Real wage, Height, Life expectancy, Average years of education, Democracy, Biodiversity, Homicide rate, Working hours and Extreme poverty.</div>
   <div class="row align-items-center">
     <div class="col-sm-2"><input id="value-simple" type="number" value="" oninput="sliderchange()"></div></div>
     <div class="col-sm"><div id="slider-fill"></div></div>
   </div>
+ <div id="controls">
   <div id="yearDisplayed">In <span id="updateYear"></span></div><button id="play-button">Play</button>
+  <div id="legend">From low well-being and high inequalities <span class="dot low"></span> to higher well-being and lower inequalities <span class="dot high"></span></div>
+</div>
 <div id="chart"></div>
 </div>
 <script src="js/d3.v6.min.js"></script>
@@ -31,17 +34,17 @@
 <script src="https://unpkg.com/d3-simple-slider"></script>
 <script>
 //text narrative
-let text1870="In 1870, Western Europe and the Western Offshoots perform better than the other countries both for the well-being average and the inequalities."
-let text1910="Western Europe and Western Offshoots see their well-being score increase but some countries start catching up. With the increase in well-being, we observe a reduction in inequalities."
-let text1950="Western Europe and Western Offshoots have the highest scores on the well- being indicator, but Western Europe inequalities levels fall below the levels of the Western Offshoots."
-let text1970="Poland, Mexico and China are catching up with the leading countries."
-let text2000="Overall, the world has seen great progress. No country has a worse overall well-being today than the best performing countries had in 1820. Nevertheless the gains haven't proceeded at the same pace across regions. Differences in well-being inequalities between regions in 2000 were substantially smaller than in 1900"
+let text1870="<b>In 1870</b>, Western Europe and the Western Offshoots perform better than the other countries both for the well-being average and the inequalities."
+let text1910="Western Europe and Western Offshoots see their <b>well-being scores increase</b> but some countries start catching up. With the increase in well-being, we observe a reduction in inequalities."
+let text1950="Western Europe and Western Offshoots have the highest scores on the well- being indicator, but <b>Western Europe inequalities levels fall below the levels of the Western Offshoots</b>."
+let text1970="<b>Poland, Mexico and China are catching up</b> with the leading countries."
+let text2000="<b>Overall, the world has seen great progress</b>. No country has a worse overall well-being today than the best performing countries had in 1820. Nevertheless the gains haven't proceeded at the same pace across regions. Differences in well-being inequalities between regions in 2000 were substantially smaller than in 1900"
 
 var divCircle = d3.select("body").append("div") 
 	.attr("class", "tooltip")       
 	.style("opacity", 0);
 
-var divAnnotation = d3.select("body").append("div") 
+var divAnnotation = d3.select("#chart").append("div") 
 	.attr("class", "annotation")       
 	.style("opacity", 0);
 
@@ -59,8 +62,8 @@ if (width < 450) {
 }
 
 
-	const time_step = 2500;
-	const time_trans = 1000;
+	const time_step = 1750;
+	const time_trans = 750;
 	let currentValue = 2*marginSlider;
 
 //Slider action def
@@ -103,7 +106,7 @@ let y = d3.scaleLinear()
 
 let color = d3.scaleLinear()//.domain([-1, 0, 1])
 	.interpolate(d3.interpolateHcl)
-	.range([d3.rgb("#f1aa70"), d3.rgb("#e0e0e0"), d3.rgb("#0fb9b2")])
+	.range([d3.rgb("#EC6687"), d3.rgb("#f5f5f5"), d3.rgb("#27B499")])
 
 //x-axis
 let  xAxis ;
@@ -243,14 +246,14 @@ function initiateViz(val){
 		
 	refLineIneq.append("svg:image")
 		.attr('x', -40)
-		.attr('y', height-150)
+		.attr('y', height/2-150)
 		.attr('width', 40)
 		.attr("xlink:href", "img/arrow-left.svg")
 
 	refLineIneq.append("text")
 		//.attr("x", 0.05*width+30)
 		.attr('y', -15)
-		.attr("x", -height)
+		.attr("x", -height/2)
 		//.attr("dy", "1.75em")
 		.attr('transform','rotate(-90)')
 		.attr("text-anchor", "start")
