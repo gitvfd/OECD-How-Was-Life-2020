@@ -22,7 +22,7 @@
 			<h2>Composite indicator scores of average well-being and inequalities</h2>
 		</div>
 	</div>
-	<div id=intro>Play with the data and see how well-being has improved and inequalities have decreased since 1870 by looking at a combination of indicators, including: GDP per capita, Real wage, Height, Life expectancy, Average years of education, Democracy, Biodiversity, Homicide rate, Working hours and Extreme poverty.</div>
+	<div id=intro><b>Play the data or move the slider</b> to see how well-being has improved and inequalities have decreased since 1870 by looking at a combination of indicators, including: GDP per capita, Real wage, Height, Life expectancy, Average years of education, Democracy, Biodiversity, Homicide rate, Working hours and Extreme poverty.</div>
 	<div class="row align-items-center">
 		<div class="col-sm-2"><input id="value-simple" type="number" value="" oninput="sliderchange()"></div></div>
 		<div class="col-sm"><div id="slider-fill"></div></div>
@@ -68,8 +68,8 @@ if (width < 450) {
 }
 
 
-	const time_step = 1750;
-	const time_trans = 750;
+	const time_step = 2250;
+	const time_trans = 900;
 	let currentValue = 2*marginSlider;
 
 //Slider action def
