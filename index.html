@@ -104,7 +104,7 @@ let simulation;
 
 let x = d3.scaleLinear()
 	//.domain([-2, 2])
-	.range([0,width]);
+	.range([width,0]);
 
 let y = d3.scaleLinear()
 	//.domain([-2, 2])
@@ -227,17 +227,20 @@ function initiateViz(val){
 		.attr("y1", 0).attr("y2", 0)
 		.attr("stroke", "#979797")
 		.attr("stroke-dasharray", "3,2");
-	refLineAvg.append("svg:image")
-		.attr('x', 0.95*width)
-		.attr('y', -40)
+
+	svg.append("svg:image")
+		.attr('x', 10)
+		.attr('y', 0)
 		.attr('width', 40)
 		.attr("xlink:href", "img/arrow-up.svg")
-	refLineAvg.append("text")
-		.attr("x", 0.95*width)
-		.attr('dy', '-1em')
+
+	svg.append("text")
+		.attr("x", 40)
+		.attr('y', 27)
 		/*.attr("dx", "-.1em")*/
 		//.attr("dy", "1.75em")
-		.attr("text-anchor", "end")
+		.attr("text-anchor", "start")
+		.style("font-weight",900)
 		.text("Better Well-Being");
 
 
@@ -250,19 +253,20 @@ function initiateViz(val){
 		.attr("stroke", "#979797")
 		.attr("stroke-dasharray", "3,2");
 		
-	refLineIneq.append("svg:image")
-		.attr('x', -40)
-		.attr('y', height/2-150)
+	svg.append("svg:image")
+		.attr('x', 0.935*width)
+		.attr('y', 0.9*height)
 		.attr('width', 40)
-		.attr("xlink:href", "img/arrow-left.svg")
+		.attr("xlink:href", "img/arrow-right.svg")
 
-	refLineIneq.append("text")
+	svg.append("text")
 		//.attr("x", 0.05*width+30)
-		.attr('y', -15)
-		.attr("x", -height/2)
+		.attr('y', 0.955*height)
+		.attr("x", 0.85*width)
 		//.attr("dy", "1.75em")
-		.attr('transform','rotate(-90)')
+		//.attr('transform','rotate(-90)')
 		.attr("text-anchor", "start")
+		.style("font-weight",900)
 		.text("Lower Inequality");
 
     // Create node data.

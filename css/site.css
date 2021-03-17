@@ -188,7 +188,7 @@ div.tooltip {
 }
 div.annotation {
     position:absolute;
-    top: 5%;left:50%;
+    top: 25%;left:5%;
     width: auto;
     height: auto;
     max-width: 40%;
