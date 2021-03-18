@@ -18,11 +18,11 @@
 	<div id="heading">
 		<img id="quotes" src="img/quotes.png"></img>
 		<div id="title">
-			<h1>Well-Being improving and inequalities decreasing over the years</h1>
-			<h2>Composite indicator scores of average well-being and inequalities</h2>
+			<h1>150 years of change for the better</h1>
+			<h2>Well-being has improved and inequalities have decreased since 1870</h2>
 		</div>
 	</div>
-	<div id=intro><b>Play the data or move the slider</b> to see how well-being has improved and inequalities have decreased since 1870 by looking at a combination of indicators, including: GDP per capita, Real wage, Height, Life expectancy, Average years of education, Democracy, Biodiversity, Homicide rate, Working hours and Extreme poverty.</div>
+	<div id=intro><b>Explore the data! Move the slider</b> to see how life has changed in OECD countries since 1870. The data draw on a combination social and economic indicators, including: GDP per capita, real wages, height, life expectancy, average years of education, institutional quality, biodiversity, homicide rate, working hours and extreme poverty.</div>
 	<div class="row align-items-center">
 		<div class="col-sm-2"><input id="value-simple" type="number" value="" oninput="sliderchange()"></div></div>
 		<div class="col-sm"><div id="slider-fill"></div></div>
@@ -162,8 +162,8 @@ wellbeing.then(function(data){
 		.max((highest))
 		.width(widthSlider)
 		.tickFormat(d3.format('.0f'))
-		.ticks(5)
-		//.tickValues([...new Set(data.map(d => d.Year))])
+		//.ticks(5)
+		.tickValues([...new Set(data.map(d => d.Year))])
 		.marks([...new Set(data.map(d => d.Year))])
 		.fill('#78E4CE')
 		.handle(
@@ -241,7 +241,7 @@ function initiateViz(val){
 		//.attr("dy", "1.75em")
 		.attr("text-anchor", "start")
 		.style("font-weight",900)
-		.text("Better Well-Being");
+		.text("Increased Well-Being");
 
 
 	refLineIneq = svg.append("g")
@@ -505,26 +505,34 @@ playButton
     .on("click", function() {
 		var button = d3.select(this);
 		if (button.text() == "Pause") {
-		moving = false;
-		clearInterval(timer);
-		// timer = 0;
-		button.text("Play");
-    } else {
-      moving = true;
-      timer = setInterval(step, time_step);
-      button.text("Pause");
-    }
-    console.log("Slider moving: " + moving);
+			moving = false;
+			clearInterval(timer);
+			// timer = 0;
+			button.text("Play");
+		} else if(document.getElementById('value-simple').value==highest){
+			sliderFill.silentValue(lowest)
+			document.getElementById('value-simple').value=lowest;
+
+			document.getElementById('updateYear').innerHTML=lowest;
+			updateViz(lowest)
+			moving = true;
+			timer = setInterval(step, time_step);
+			button.text("Pause");
+		} else {
+			moving = true;
+			timer = setInterval(step, time_step);
+			button.text("Pause");
+			}
+		console.log("Slider moving: " + moving);
 })
 
 d3.select(".reload")
     .on("click", function(){
-		console.log(lowest)
 		sliderFill.silentValue(lowest)
 		document.getElementById('value-simple').value=lowest;
 
 		document.getElementById('updateYear').innerHTML=lowest;
-updateViz(lowest)
+		updateViz(lowest)
 	});
 
   
