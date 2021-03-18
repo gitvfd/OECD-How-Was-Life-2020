@@ -254,7 +254,7 @@ function initiateViz(val){
 		.attr("stroke-dasharray", "3,2");
 		
 	svg.append("svg:image")
-		.attr('x', 0.935*width)
+		.attr('x', 0.8*width)
 		.attr('y', 0.9*height)
 		.attr('width', 40)
 		.attr("xlink:href", "img/arrow-right.svg")
@@ -267,7 +267,8 @@ function initiateViz(val){
 		//.attr('transform','rotate(-90)')
 		.attr("text-anchor", "start")
 		.style("font-weight",900)
-		.text("Lower Inequality");
+		.text("Lower Inequality")
+		.attr("xlink:href", "img/arrow-right.svg");
 
     // Create node data.
     nodes = wellbeingdata.filter(p => p.Year === val).map(function(d,i) {		
