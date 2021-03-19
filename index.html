@@ -57,7 +57,7 @@ var divAnnotation = d3.select("#chart").append("div")
 // Dimensions of chart.
 let margin = { top: 30, right: 10, bottom: 30, left: 50 },
       width = parseInt(d3.select('#chart').style('width'), 10) - margin.left - margin.right,
-      height = 550 - margin.top - margin.bottom,
+      height = 500 - margin.top - margin.bottom,
 	  r = 15,
 	  marginSlider=30;
 	  widthSlider = parseInt(d3.select('#chart').style('width'), 10) - 2*marginSlider;
@@ -254,7 +254,12 @@ function initiateViz(val){
 		.attr("stroke-dasharray", "3,2");
 		
 	svg.append("svg:image")
-		.attr('x', 0.8*width)
+		.attr('x', function(){
+			if(width<750)
+			 return 0.55*width
+			else
+			 return 0.8*width
+		})
 		.attr('y', 0.9*height)
 		.attr('width', 40)
 		.attr("xlink:href", "img/arrow-right.svg")
@@ -262,7 +267,12 @@ function initiateViz(val){
 	svg.append("text")
 		//.attr("x", 0.05*width+30)
 		.attr('y', 0.955*height)
-		.attr("x", 0.85*width)
+		.attr("x", function(){
+			if(width<750)
+			 return 0.6*width
+			else
+			 return 0.85*width
+		})
 		//.attr("dy", "1.75em")
 		//.attr('transform','rotate(-90)')
 		.attr("text-anchor", "start")
